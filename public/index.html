@@ -2,38 +2,269 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Text-Me — Образовательный мессенджер</title>
-    <meta name="description" content="Мессенджер для изучения английского с AI-проверкой грамматики">
-    <style>
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #f0f2f5;
-            color: #333;
-        }
-        .placeholder {
-            text-align: center;
-            padding: 2rem;
-        }
-        .placeholder h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        .placeholder p {
-            color: #666;
-        }
-    </style>
+    <meta name="description" content="Мессенджер для изучения английского с AI-проверкой грамматики в реальном времени">
+    <meta name="theme-color" content="#2B5278">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="placeholder">
-        <h1>📱 Text-Me</h1>
-        <p>Сервер работает. Фронтенд будет добавлен на этапе 3.</p>
-        <p><a href="/api/health">API Health Check →</a></p>
+
+    <!-- ========================================
+         LOGIN SCREEN — Форма входа
+         ======================================== -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="logo">📱</div>
+            <h1>Text-Me</h1>
+            <p>Практикуй английский в чате с друзьями.<br>AI проверит грамматику в реальном времени.</p>
+            <form class="login-form" id="login-form">
+                <input
+                    type="text"
+                    id="login-username"
+                    placeholder="Введи username"
+                    autocomplete="username"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    maxlength="50"
+                    required
+                >
+                <button type="submit" class="login-btn" id="login-btn">
+                    Войти
+                </button>
+            </form>
+        </div>
     </div>
+
+    <!-- ========================================
+         APP CONTAINER — Основное приложение
+         ======================================== -->
+    <div class="app" id="app">
+
+        <!-- ====================================
+             SIDEBAR — Список чатов
+             ==================================== -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="app-title">
+                    <span class="title-icon">📱</span>
+                    <span>Text-Me</span>
+                </div>
+                <div class="sidebar-header-actions">
+                    <button id="btn-logout" title="Выйти" aria-label="Выйти из аккаунта">⏻</button>
+                </div>
+            </div>
+
+            <!-- Поиск -->
+            <div class="search-bar">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Поиск чатов..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
+            <!-- Список чатов -->
+            <div class="chat-list" id="chat-list">
+                <!-- Чаты вставляются из <template> через JS -->
+
+                <!-- Пустой список (показывается если нет чатов) -->
+                <div class="chat-list-empty" id="chat-list-empty">
+                    <div class="empty-icon">💬</div>
+                    <h3>Нет чатов</h3>
+                    <p>Нажми «+» чтобы начать<br>общение на английском!</p>
+                </div>
+            </div>
+
+            <!-- FAB — создание нового чата -->
+            <button class="fab-new-chat" id="fab-new-chat" title="Новый чат" aria-label="Создать новый чат">
+                ＋
+            </button>
+        </aside>
+
+        <!-- ====================================
+             CHAT VIEW — Окно диалога
+             ==================================== -->
+        <main class="chat-view" id="chat-view">
+            <!-- Chat Header -->
+            <div class="chat-header" id="chat-header">
+                <button class="back-btn" id="btn-back" aria-label="Назад к списку чатов">←</button>
+                <div class="chat-avatar" id="chat-avatar">?</div>
+                <div class="chat-header-info">
+                    <div class="chat-header-name" id="chat-header-name">Выберите чат</div>
+                    <div class="chat-header-status" id="chat-header-status">—</div>
+                </div>
+            </div>
+
+            <!-- Область сообщений -->
+            <div class="message-area" id="message-area">
+                <!-- Пустой чат placeholder -->
+                <div class="message-area-empty" id="message-area-empty">
+                    <div class="empty-chat-icon">🎓</div>
+                    <h3>Начните общение на английском!</h3>
+                    <p>Пишите на английском — AI проверит вашу грамматику и покажет исправления прямо в чате.</p>
+                </div>
+            </div>
+
+            <!-- Scroll-to-bottom button -->
+            <button class="scroll-bottom-btn" id="scroll-bottom-btn" aria-label="К последнему сообщению">↓</button>
+
+            <!-- Smart Hint Bar -->
+            <div class="smart-hint-bar" id="smart-hint-bar">
+                <span class="hint-placeholder" id="hint-placeholder">AI ассистент готов ✨</span>
+                <span class="hint-text hidden" id="hint-text"></span>
+                <span class="hint-spinner hidden" id="hint-spinner"></span>
+            </div>
+
+            <!-- Поле ввода -->
+            <div class="input-area" id="input-area">
+                <button class="attach-btn" id="btn-attach" title="Прикрепить изображение" aria-label="Прикрепить файл">
+                    📎
+                </button>
+                <div class="input-wrapper">
+                    <textarea
+                        id="message-input"
+                        placeholder="Напишите сообщение..."
+                        rows="1"
+                        autocomplete="off"
+                        maxlength="2000"
+                    ></textarea>
+                </div>
+                <button class="send-btn" id="btn-send" title="Отправить" aria-label="Отправить сообщение" disabled>
+                    ➤
+                </button>
+            </div>
+        </main>
+
+        <!-- ====================================
+             CHAT VIEW PLACEHOLDER (Desktop only)
+             ==================================== -->
+        <div class="chat-view-placeholder" id="chat-view-placeholder">
+            <div class="placeholder-icon">💬</div>
+            <h2>Text-Me</h2>
+            <p>Выберите чат из списка слева или создайте новый, чтобы начать практиковать английский.</p>
+        </div>
+
+    </div>
+
+    <!-- ========================================
+         BOTTOM SHEET — Грамматический разбор
+         ======================================== -->
+    <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+            <span class="sheet-title">Разбор грамматики</span>
+            <button class="sheet-close-btn" id="sheet-close-btn" aria-label="Закрыть разбор">✕</button>
+        </div>
+        <div class="sheet-content" id="sheet-content">
+            <!-- Эталонная фраза -->
+            <div class="sheet-phrase" id="sheet-phrase"></div>
+            <!-- Список ошибок (генерируется из JS) -->
+            <div id="sheet-errors"></div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         NEW CHAT MODAL — Создание чата
+         ======================================== -->
+    <div class="modal-overlay" id="new-chat-modal">
+        <div class="modal">
+            <h2>Новый чат</h2>
+            <input
+                type="text"
+                id="new-chat-username"
+                placeholder="Username собеседника"
+                autocomplete="off"
+                autocapitalize="off"
+                maxlength="50"
+            >
+            <div class="modal-actions">
+                <button class="btn-cancel" id="modal-cancel">Отмена</button>
+                <button class="btn-confirm" id="modal-confirm">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         TOAST NOTIFICATION
+         ======================================== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ========================================
+         LOADING OVERLAY (Cold start)
+         ======================================== -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Сервер просыпается, подождите...</div>
+    </div>
+
+    <!-- ========================================
+         TEMPLATES — Шаблоны элементов
+         ======================================== -->
+
+    <!-- Шаблон элемента списка чатов -->
+    <template id="chat-item-tpl">
+        <div class="chat-item" data-chat-id="">
+            <div class="avatar">
+                <span class="avatar-letter"></span>
+                <span class="online-dot hidden"></span>
+            </div>
+            <div class="chat-item-info">
+                <div class="chat-item-top">
+                    <span class="chat-item-name"></span>
+                    <span class="chat-item-time"></span>
+                </div>
+                <div class="chat-item-bottom">
+                    <span class="chat-item-last-msg"></span>
+                    <span class="chat-item-badge hidden"></span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Шаблон бабла сообщения (двухуровневый) -->
+    <template id="msg-bubble-tpl">
+        <div class="msg-row" data-msg-id="" data-local-id="">
+            <div class="msg-bubble">
+                <!-- Имя отправителя (для групповых чатов) -->
+                <div class="msg-sender hidden"></div>
+
+                <!-- Оригинальный текст -->
+                <div class="msg-original"></div>
+
+                <!-- Correction sub-bubble (скрыт, появляется после проверки) -->
+                <div class="correction-sub-bubble">
+                    <div class="correction-text"></div>
+                    <div class="correction-footer">
+                        <button class="breakdown-btn" title="Разбор грамматики" aria-label="Показать грамматический разбор">💡</button>
+                    </div>
+                </div>
+
+                <!-- Мета: время + статус + EN✓ -->
+                <div class="msg-meta">
+                    <span class="en-check hidden"></span>
+                    <span class="msg-time"></span>
+                    <span class="msg-status"></span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ========================================
+         SCRIPTS
+         ======================================== -->
+    <!-- Socket.IO Client (v4.x — совместим с серверным socket.io@4.8) -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <!-- Точка входа приложения (ES Module) -->
+    <script type="module" src="/js/app.js"></script>
+
 </body>
 </html>

@@ -73,14 +73,19 @@ fastify.get('/api/health', async () => {
 
 const start = async () => {
   try {
-    const port = parseInt(process.env.PORT, 10) || 3000;
+    const port = parseInt(process.env.PORT, 10) || 1005;
     const host = '0.0.0.0'; // Render.com требует привязку к 0.0.0.0
 
     await fastify.listen({ port, host });
 
+    // Инициализация WebSocket (после listen, когда HTTP-сервер доступен)
+    const { setupSocketIO } = require('./ws/socketManager');
+    setupSocketIO(fastify);
+
     console.log('='.repeat(50));
     console.log(`🚀 Text-Me сервер запущен: http://localhost:${port}`);
     console.log(`📁 Статика: ${path.join(__dirname, '..', 'public')}`);
+    console.log(`🔌 WebSocket: ws://localhost:${port}`);
     console.log('='.repeat(50));
 
     // Инициализация cron-задач очистки данных

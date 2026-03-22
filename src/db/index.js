@@ -12,7 +12,7 @@ const pool = new Pool({
   // PgBouncer на стороне Supabase помогает, но мы тоже ограничиваем пул
   max: 5,
   // Таймаут ожидания свободного соединения из пула (мс)
-  idleTimeoutMillis: 30000,
+  idleTimeoutMillis: 10050,
   // Таймаут подключения к БД (мс)
   connectionTimeoutMillis: 10000,
   // Для Supabase Connection Pooler (PgBouncer) необходимо
